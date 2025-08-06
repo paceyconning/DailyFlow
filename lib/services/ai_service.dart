@@ -192,7 +192,7 @@ Consider:
     return '''
 You are an AI habit coach. Suggest 2-3 new habits based on the user's current habits and productivity patterns.
 
-Current Habits: ${currentHabits.map((h) => '${h.title} (${h.frequency.name}, streak: ${h.currentStreak})').join(', ')}
+Current Habits: ${currentHabits.map((h) => '${h.title} (${h.frequencyLabel}, streak: ${h.currentStreak})').join(', ')}
 
 User Stats:
 - Weak habits (streak < 3): $weakHabits

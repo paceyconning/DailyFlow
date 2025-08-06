@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../providers/ai_provider.dart';
 import '../utils/theme.dart';
-import 'ai_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -74,60 +73,24 @@ class SettingsScreen extends StatelessWidget {
                     leading: Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: aiProvider.isServerAvailable 
-                            ? AppTheme.primaryGreen.withOpacity(0.1)
-                            : AppTheme.primaryRed.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(
-                        Icons.psychology,
-                        color: aiProvider.isServerAvailable 
-                            ? AppTheme.primaryGreen
-                            : AppTheme.primaryRed,
-                        size: 20,
-                      ),
-                    ),
-                    title: const Text('AI Settings'),
-                    subtitle: Text(
-                      aiProvider.isServerAvailable 
-                          ? 'Connected to Ollama server'
-                          : 'Ollama server not available',
-                    ),
-                    trailing: Icon(
-                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.error,
-                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : AppTheme.primaryRed,
-                    ),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const AISettingsScreen(),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-              Consumer<AIProvider>(
-                builder: (context, aiProvider, child) {
-                  return ListTile(
-                    leading: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
                         color: AppTheme.primaryBlue.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
-                        Icons.insights,
+                        Icons.psychology,
                         color: AppTheme.primaryBlue,
                         size: 20,
                       ),
                     ),
                     title: const Text('Smart Insights'),
-                    subtitle: const Text('AI-powered productivity insights'),
+                    subtitle: Text(
+                      aiProvider.isUsingAdvancedAI 
+                          ? 'Advanced AI (Premium)'
+                          : 'Basic AI (Free)',
+                    ),
                     trailing: Icon(
-                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.lock,
-                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : Colors.grey,
+                      aiProvider.isUsingAdvancedAI ? Icons.star : Icons.check_circle,
+                      color: aiProvider.isUsingAdvancedAI ? AppTheme.primaryPurple : AppTheme.primaryGreen,
                     ),
                   );
                 },
@@ -148,10 +111,42 @@ class SettingsScreen extends StatelessWidget {
                       ),
                     ),
                     title: const Text('Task Prioritization'),
-                    subtitle: const Text('AI automatically prioritizes your tasks'),
+                    subtitle: Text(
+                      aiProvider.isUsingAdvancedAI 
+                          ? 'Advanced AI prioritization'
+                          : 'Basic priority sorting',
+                    ),
                     trailing: Icon(
-                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.lock,
-                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : Colors.grey,
+                      aiProvider.isUsingAdvancedAI ? Icons.star : Icons.check_circle,
+                      color: aiProvider.isUsingAdvancedAI ? AppTheme.primaryPurple : AppTheme.primaryGreen,
+                    ),
+                  );
+                },
+              ),
+              Consumer<AIProvider>(
+                builder: (context, aiProvider, child) {
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryGreen.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.repeat,
+                        color: AppTheme.primaryGreen,
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text('Habit Suggestions'),
+                    subtitle: Text(
+                      aiProvider.isUsingAdvancedAI 
+                          ? 'AI-powered habit coaching'
+                          : 'Basic habit recommendations',
+                    ),
+                    trailing: Icon(
+                      aiProvider.isUsingAdvancedAI ? Icons.star : Icons.check_circle,
+                      color: aiProvider.isUsingAdvancedAI ? AppTheme.primaryPurple : AppTheme.primaryGreen,
                     ),
                   );
                 },

@@ -59,10 +59,10 @@ class _AIInsightCardState extends State<AIInsightCard> {
         final motivationalMessage = aiProvider.motivationalMessage;
         final isLoading = aiProvider.isLoading;
         
-        String insight;
-        String subtitle;
-        IconData icon;
-        Color color;
+        String insight = 'Welcome to DailyFlow!';
+        String subtitle = 'Start by adding your first task or habit to begin your productivity journey.';
+        IconData icon = Icons.rocket_launch;
+        Color color = AppTheme.primaryBlue;
         
         if (isLoading) {
           insight = 'Analyzing your data...';
@@ -164,12 +164,20 @@ class _AIInsightCardState extends State<AIInsightCard> {
                     Row(
                       children: [
                         Text(
-                          'AI Insight',
+                          aiProvider.isUsingAdvancedAI ? 'Advanced AI Insight' : 'AI Insight',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: color,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
+                        if (aiProvider.isUsingAdvancedAI) ...[
+                          const SizedBox(width: 4),
+                          Icon(
+                            Icons.star,
+                            color: AppTheme.primaryPurple,
+                            size: 12,
+                          ),
+                        ],
                         if (isLoading) ...[
                           const SizedBox(width: 8),
                           SizedBox(
@@ -200,7 +208,7 @@ class _AIInsightCardState extends State<AIInsightCard> {
                   ],
                 ),
               ),
-              if (!isLoading && aiProvider.isServerAvailable)
+                             if (!isLoading)
                 IconButton(
                   icon: Icon(
                     Icons.refresh,

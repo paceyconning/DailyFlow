@@ -22,13 +22,15 @@ void main() async {
   // Initialize services
   await NotificationService().initialize();
   AnalyticsService().recordSessionStart();
-  await aiProvider.initialize();
   
   // Initialize providers
   final themeProvider = ThemeProvider();
   final taskProvider = TaskProvider();
   final habitProvider = HabitProvider();
   final aiProvider = AIProvider();
+  
+  // Initialize AI provider
+  await aiProvider.initialize();
   
   runApp(
     MultiProvider(
