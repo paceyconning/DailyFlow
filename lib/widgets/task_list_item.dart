@@ -28,11 +28,14 @@ class TaskListItem extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            context.read<TaskProvider>().toggleTaskCompletion(task.id);
-          },
+                  child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              context.read<TaskProvider>().toggleTaskCompletion(task.id);
+            },
+            onLongPress: () {
+              _showDeleteDialog(context);
+            },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -168,6 +171,16 @@ class TaskListItem extends StatelessWidget {
                           
                           const Spacer(),
                           
+                          // Delete button
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: AppTheme.primaryRed.withOpacity(0.7),
+                              size: 20,
+                            ),
+                            onPressed: () => _showDeleteDialog(context),
+                          ),
+                          
                           // Due date/time
                           if (task.dueDate != null)
                             Text(
@@ -191,6 +204,34 @@ class TaskListItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Task'),
+          content: Text('Are you sure you want to delete "${task.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<TaskProvider>().deleteTask(task.id);
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.primaryRed,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 } 

@@ -34,10 +34,7 @@ class HomeScreen extends StatelessWidget {
                     'DailyFlow',
                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      background: Paint()
-                        ..shader = AppTheme.primaryGradient.createShader(
-                          const Rect.fromLTWH(0, 0, 200, 30),
-                        ),
+                      color: AppTheme.primaryPurple,
                     ),
                   ),
                   Text(
@@ -302,7 +299,7 @@ class HomeScreen extends StatelessWidget {
                     color: AppTheme.primaryBlue,
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigate to add task screen
+                      Navigator.pushNamed(context, '/tasks');
                     },
                   ),
                 ),
@@ -315,7 +312,7 @@ class HomeScreen extends StatelessWidget {
                     color: AppTheme.primaryGreen,
                     onTap: () {
                       Navigator.pop(context);
-                      // Navigate to add habit screen
+                      Navigator.pushNamed(context, '/habits');
                     },
                   ),
                 ),

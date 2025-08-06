@@ -28,11 +28,14 @@ class HabitListItem extends StatelessWidget {
       ),
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            context.read<HabitProvider>().toggleHabitCompletion(habit.id);
-          },
+                  child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            onTap: () {
+              context.read<HabitProvider>().toggleHabitCompletion(habit.id);
+            },
+            onLongPress: () {
+              _showDeleteDialog(context);
+            },
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -162,6 +165,16 @@ class HabitListItem extends StatelessWidget {
                           
                           const Spacer(),
                           
+                          // Delete button
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: AppTheme.primaryRed.withOpacity(0.7),
+                              size: 20,
+                            ),
+                            onPressed: () => _showDeleteDialog(context),
+                          ),
+                          
                           // Streak
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -209,6 +222,34 @@ class HabitListItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Habit'),
+          content: Text('Are you sure you want to delete "${habit.title}"?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<HabitProvider>().deleteHabit(habit.id);
+                Navigator.of(context).pop();
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: AppTheme.primaryRed,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 } 
