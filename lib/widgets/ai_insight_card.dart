@@ -2,57 +2,127 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../providers/habit_provider.dart';
+import '../providers/ai_provider.dart';
 import '../utils/theme.dart';
 
-class AIInsightCard extends StatelessWidget {
+class AIInsightCard extends StatefulWidget {
   const AIInsightCard({super.key});
 
   @override
+  State<AIInsightCard> createState() => _AIInsightCardState();
+}
+
+class _AIInsightCardState extends State<AIInsightCard> {
+  @override
+  void initState() {
+    super.initState();
+    // Trigger AI insights generation when widget initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _generateInsights();
+    });
+  }
+
+  void _generateInsights() {
+    final aiProvider = context.read<AIProvider>();
+    final taskProvider = context.read<TaskProvider>();
+    final habitProvider = context.read<HabitProvider>();
+    
+    final tasks = taskProvider.tasks;
+    final habits = habitProvider.habits;
+    final userStats = {
+      'completionRate': taskProvider.completionRate,
+      'mostProductiveTime': 'Morning',
+      'averageStreak': habits.isNotEmpty 
+          ? habits.map((h) => h.currentStreak).reduce((a, b) => a + b) / habits.length 
+          : 0,
+    };
+
+    aiProvider.generateInsights(
+      tasks: tasks,
+      habits: habits,
+      userStats: userStats,
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Consumer2<TaskProvider, HabitProvider>(
-      builder: (context, taskProvider, habitProvider, child) {
+    return Consumer3<TaskProvider, HabitProvider, AIProvider>(
+      builder: (context, taskProvider, habitProvider, aiProvider, child) {
         final todayTasks = taskProvider.getTodayTasks();
         final todayHabits = habitProvider.getTodayHabits();
         final completedTasks = todayTasks.where((t) => t.isCompleted).length;
         final completedHabits = habitProvider.getCompletedTodayHabits().length;
         final overdueTasks = taskProvider.getOverdueTasks();
         
+        // Get AI insights
+        final insights = aiProvider.insights;
+        final motivationalMessage = aiProvider.motivationalMessage;
+        final isLoading = aiProvider.isLoading;
+        
         String insight;
         String subtitle;
         IconData icon;
         Color color;
         
-        // Generate AI insight based on current state
-        if (todayTasks.isEmpty && todayHabits.isEmpty) {
-          insight = 'Welcome to DailyFlow!';
-          subtitle = 'Start by adding your first task or habit to begin your productivity journey.';
-          icon = Icons.rocket_launch;
-          color = AppTheme.primaryBlue;
-        } else if (completedTasks == todayTasks.length && completedHabits == todayHabits.length) {
-          insight = 'Amazing work today!';
-          subtitle = 'You\'ve completed all your tasks and habits. You\'re on fire! 🔥';
-          icon = Icons.celebration;
-          color = AppTheme.primaryGreen;
-        } else if (overdueTasks.isNotEmpty) {
-          insight = 'You have overdue tasks';
-          subtitle = 'Consider prioritizing these tasks to stay on track.';
-          icon = Icons.warning;
-          color = AppTheme.primaryRed;
-        } else if (completedTasks > 0 && completedTasks < todayTasks.length) {
-          insight = 'Great progress!';
-          subtitle = 'You\'ve completed ${completedTasks}/${todayTasks.length} tasks. Keep going!';
-          icon = Icons.trending_up;
-          color = AppTheme.primaryOrange;
-        } else if (completedHabits > 0) {
-          insight = 'Building consistency!';
-          subtitle = 'You\'ve completed ${completedHabits}/${todayHabits.length} habits today.';
-          icon = Icons.repeat;
-          color = AppTheme.primaryGreen;
+        if (isLoading) {
+          insight = 'Analyzing your data...';
+          subtitle = 'AI is generating personalized insights for you.';
+          icon = Icons.psychology;
+          color = AppTheme.primaryPurple;
+        } else if (insights.isNotEmpty && insights['insights'] != null) {
+          // Use AI-generated insights
+          final aiInsights = insights['insights'] as List;
+          if (aiInsights.isNotEmpty) {
+            final firstInsight = aiInsights.first as Map<String, dynamic>;
+            insight = firstInsight['title'] ?? 'AI Insight';
+            subtitle = firstInsight['description'] ?? motivationalMessage;
+            
+            // Set color based on insight type
+            final type = firstInsight['type'] ?? 'productivity';
+            switch (type) {
+              case 'productivity':
+                color = AppTheme.primaryBlue;
+                icon = Icons.trending_up;
+                break;
+              case 'habit':
+                color = AppTheme.primaryGreen;
+                icon = Icons.repeat;
+                break;
+              case 'motivation':
+                color = AppTheme.primaryOrange;
+                icon = Icons.psychology;
+                break;
+              case 'task':
+                color = AppTheme.primaryPurple;
+                icon = Icons.task;
+                break;
+              default:
+                color = AppTheme.primaryBlue;
+                icon = Icons.psychology;
+            }
+          } else {
+            // Fallback to basic insights
+            _generateBasicInsight(
+              todayTasks, todayHabits, completedTasks, completedHabits, overdueTasks,
+              (i, s, ic, c) {
+                insight = i;
+                subtitle = s;
+                icon = ic;
+                color = c;
+              },
+            );
+          }
         } else {
-          insight = 'Ready to start?';
-          subtitle = 'You have ${todayTasks.length} tasks and ${todayHabits.length} habits for today.';
-          icon = Icons.play_arrow;
-          color = AppTheme.primaryBlue;
+          // Fallback to basic insights
+          _generateBasicInsight(
+            todayTasks, todayHabits, completedTasks, completedHabits, overdueTasks,
+            (i, s, ic, c) {
+              insight = i;
+              subtitle = s;
+              icon = ic;
+              color = c;
+            },
+          );
         }
         
         return Container(
@@ -91,12 +161,27 @@ class AIInsightCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'AI Insight',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: color,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    Row(
+                      children: [
+                        Text(
+                          'AI Insight',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (isLoading) ...[
+                          const SizedBox(width: 8),
+                          SizedBox(
+                            width: 12,
+                            height: 12,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(color),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -115,10 +200,68 @@ class AIInsightCard extends StatelessWidget {
                   ],
                 ),
               ),
+              if (!isLoading && aiProvider.isServerAvailable)
+                IconButton(
+                  icon: Icon(
+                    Icons.refresh,
+                    color: color.withOpacity(0.7),
+                    size: 20,
+                  ),
+                  onPressed: _generateInsights,
+                  tooltip: 'Refresh AI insights',
+                ),
             ],
           ),
         );
       },
     );
+  }
+
+  void _generateBasicInsight(
+    List tasks,
+    List habits,
+    int completedTasks,
+    int completedHabits,
+    List overdueTasks,
+    Function(String, String, IconData, Color) callback,
+  ) {
+    String insight;
+    String subtitle;
+    IconData icon;
+    Color color;
+    
+    if (tasks.isEmpty && habits.isEmpty) {
+      insight = 'Welcome to DailyFlow!';
+      subtitle = 'Start by adding your first task or habit to begin your productivity journey.';
+      icon = Icons.rocket_launch;
+      color = AppTheme.primaryBlue;
+    } else if (completedTasks == tasks.length && completedHabits == habits.length) {
+      insight = 'Amazing work today!';
+      subtitle = 'You\'ve completed all your tasks and habits. You\'re on fire! 🔥';
+      icon = Icons.celebration;
+      color = AppTheme.primaryGreen;
+    } else if (overdueTasks.isNotEmpty) {
+      insight = 'You have overdue tasks';
+      subtitle = 'Consider prioritizing these tasks to stay on track.';
+      icon = Icons.warning;
+      color = AppTheme.primaryRed;
+    } else if (completedTasks > 0 && completedTasks < tasks.length) {
+      insight = 'Great progress!';
+      subtitle = 'You\'ve completed $completedTasks/${tasks.length} tasks. Keep going!';
+      icon = Icons.trending_up;
+      color = AppTheme.primaryOrange;
+    } else if (completedHabits > 0) {
+      insight = 'Building consistency!';
+      subtitle = 'You\'ve completed $completedHabits/${habits.length} habits today.';
+      icon = Icons.repeat;
+      color = AppTheme.primaryGreen;
+    } else {
+      insight = 'Ready to start?';
+      subtitle = 'You have ${tasks.length} tasks and ${habits.length} habits for today.';
+      icon = Icons.play_arrow;
+      color = AppTheme.primaryBlue;
+    }
+    
+    callback(insight, subtitle, icon, color);
   }
 } 

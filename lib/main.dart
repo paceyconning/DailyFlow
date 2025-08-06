@@ -12,6 +12,8 @@ import 'screens/settings_screen.dart';
 import 'screens/analytics_screen.dart';
 import 'services/notification_service.dart';
 import 'services/analytics_service.dart';
+import 'services/ai_service.dart';
+import 'providers/ai_provider.dart';
 import 'utils/theme.dart';
 
 void main() async {
@@ -20,11 +22,13 @@ void main() async {
   // Initialize services
   await NotificationService().initialize();
   AnalyticsService().recordSessionStart();
+  await aiProvider.initialize();
   
   // Initialize providers
   final themeProvider = ThemeProvider();
   final taskProvider = TaskProvider();
   final habitProvider = HabitProvider();
+  final aiProvider = AIProvider();
   
   runApp(
     MultiProvider(
@@ -32,6 +36,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => themeProvider),
         ChangeNotifierProvider(create: (_) => taskProvider),
         ChangeNotifierProvider(create: (_) => habitProvider),
+        ChangeNotifierProvider(create: (_) => aiProvider),
       ],
       child: const DailyFlowApp(),
     ),

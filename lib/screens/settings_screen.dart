@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../providers/ai_provider.dart';
 import '../utils/theme.dart';
+import 'ai_settings_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -53,6 +55,103 @@ class SettingsScreen extends StatelessWidget {
                           ),
                         );
                       }).toList(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // AI Features
+          _SettingsSection(
+            title: 'AI Features',
+            children: [
+              Consumer<AIProvider>(
+                builder: (context, aiProvider, child) {
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: aiProvider.isServerAvailable 
+                            ? AppTheme.primaryGreen.withOpacity(0.1)
+                            : AppTheme.primaryRed.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.psychology,
+                        color: aiProvider.isServerAvailable 
+                            ? AppTheme.primaryGreen
+                            : AppTheme.primaryRed,
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text('AI Settings'),
+                    subtitle: Text(
+                      aiProvider.isServerAvailable 
+                          ? 'Connected to Ollama server'
+                          : 'Ollama server not available',
+                    ),
+                    trailing: Icon(
+                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.error,
+                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : AppTheme.primaryRed,
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AISettingsScreen(),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
+              Consumer<AIProvider>(
+                builder: (context, aiProvider, child) {
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryBlue.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.insights,
+                        color: AppTheme.primaryBlue,
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text('Smart Insights'),
+                    subtitle: const Text('AI-powered productivity insights'),
+                    trailing: Icon(
+                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.lock,
+                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : Colors.grey,
+                    ),
+                  );
+                },
+              ),
+              Consumer<AIProvider>(
+                builder: (context, aiProvider, child) {
+                  return ListTile(
+                    leading: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryOrange.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        Icons.priority_high,
+                        color: AppTheme.primaryOrange,
+                        size: 20,
+                      ),
+                    ),
+                    title: const Text('Task Prioritization'),
+                    subtitle: const Text('AI automatically prioritizes your tasks'),
+                    trailing: Icon(
+                      aiProvider.isServerAvailable ? Icons.check_circle : Icons.lock,
+                      color: aiProvider.isServerAvailable ? AppTheme.primaryGreen : Colors.grey,
                     ),
                   );
                 },
