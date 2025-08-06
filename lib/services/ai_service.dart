@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/task.dart';
 import '../models/habit.dart';
+import 'ai_memory_service.dart';
 
 class AIService {
   static final AIService _instance = AIService._internal();
@@ -11,6 +12,9 @@ class AIService {
   // Ollama server configuration
   static const String _baseUrl = 'http://localhost:11434';
   static const String _model = 'llama3'; // Can be changed to mistral, codellama, etc.
+
+  // AI Memory Service
+  final AIMemoryService _memoryService = AIMemoryService();
 
   // Cache for AI responses to avoid repeated API calls
   final Map<String, dynamic> _cache = {};
@@ -23,11 +27,23 @@ class AIService {
     required Map<String, dynamic> userStats,
   }) async {
     try {
-      final prompt = _buildInsightsPrompt(tasks, habits, userStats);
+      // Store current data in AI memory
+      await _memoryService.storeTaskData(tasks);
+      await _memoryService.storeHabitData(habits);
+      
+      // Get comprehensive user data for AI analysis
+      final userData = await _memoryService.getComprehensiveUserData();
+      
+      final prompt = _buildInsightsPrompt(tasks, habits, userStats, userData);
       final response = await _callOllama(prompt);
       
       if (response != null) {
-        return _parseInsightsResponse(response);
+        final insights = _parseInsightsResponse(response);
+        
+        // Store AI insight in memory
+        await _memoryService.storeAIInsight(insights);
+        
+        return insights;
       }
       
       return _getDefaultInsights();
@@ -40,7 +56,14 @@ class AIService {
   /// Generate task prioritization recommendations
   Future<List<Task>> prioritizeTasks(List<Task> tasks) async {
     try {
-      final prompt = _buildTaskPrioritizationPrompt(tasks);
+      // Store current tasks in AI memory
+      await _memoryService.storeTaskData(tasks);
+      
+      // Get task history for context
+      final taskHistory = await _memoryService.getTaskHistory();
+      final userPatterns = await _memoryService.getUserPatterns();
+      
+      final prompt = _buildTaskPrioritizationPrompt(tasks, taskHistory, userPatterns);
       final response = await _callOllama(prompt);
       
       if (response != null) {
@@ -60,7 +83,14 @@ class AIService {
     required Map<String, dynamic> userStats,
   }) async {
     try {
-      final prompt = _buildHabitSuggestionsPrompt(currentHabits, userStats);
+      // Store current habits in AI memory
+      await _memoryService.storeHabitData(currentHabits);
+      
+      // Get habit history and patterns for context
+      final habitHistory = await _memoryService.getHabitHistory();
+      final userPatterns = await _memoryService.getUserPatterns();
+      
+      final prompt = _buildHabitSuggestionsPrompt(currentHabits, userStats, habitHistory, userPatterns);
       final response = await _callOllama(prompt);
       
       if (response != null) {
@@ -81,7 +111,14 @@ class AIService {
     required List<Habit> recentHabits,
   }) async {
     try {
-      final prompt = _buildMotivationalPrompt(userStats, recentTasks, recentHabits);
+      // Store current data in AI memory
+      await _memoryService.storeTaskData(recentTasks);
+      await _memoryService.storeHabitData(recentHabits);
+      
+      // Get comprehensive user data for personalized messages
+      final userData = await _memoryService.getComprehensiveUserData();
+      
+      final prompt = _buildMotivationalPrompt(userStats, recentTasks, recentHabits, userData);
       final response = await _callOllama(prompt);
       
       if (response != null) {
@@ -126,7 +163,7 @@ class AIService {
   }
 
   /// Build prompt for general insights
-  String _buildInsightsPrompt(List<Task> tasks, List<Habit> habits, Map<String, dynamic> userStats) {
+  String _buildInsightsPrompt(List<Task> tasks, List<Habit> habits, Map<String, dynamic> userStats, Map<String, dynamic> userData) {
     final completedTasks = tasks.where((t) => t.isCompleted).length;
     final totalTasks = tasks.length;
     final activeHabits = habits.where((h) => h.isActive).length;
@@ -134,44 +171,61 @@ class AIService {
         ? habits.map((h) => h.currentStreak).reduce((a, b) => a + b) / habits.length 
         : 0;
 
-    return '''
-You are an AI productivity coach analyzing a user's data. Provide 3 actionable insights in JSON format.
+    final taskHistory = userData['taskHistory'] as List? ?? [];
+    final habitHistory = userData['habitHistory'] as List? ?? [];
+    final userPatterns = userData['userPatterns'] as Map<String, dynamic>? ?? {};
+    final productivityStats = userData['productivityStats'] as Map<String, dynamic>? ?? {};
 
-User Data:
+    return '''
+You are an AI productivity coach with access to the user's complete history and patterns. Provide 3 actionable insights in JSON format.
+
+Current User Data:
 - Tasks completed: $completedTasks/$totalTasks
 - Active habits: $activeHabits
 - Average habit streak: ${avgStreak.toStringAsFixed(1)} days
 - Most productive time: ${userStats['mostProductiveTime'] ?? 'Not available'}
 
+User History & Patterns:
+- Total tasks in history: ${taskHistory.length}
+- Total habits in history: ${habitHistory.length}
+- Average streak: ${userPatterns['averageStreak']?.toStringAsFixed(1) ?? '0'} days
+- Category preferences: ${userPatterns['categoryPreferences']?.toString() ?? 'None'}
+- Completion rate: ${(productivityStats['completionRate'] ?? 0.0) * 100}%
+
 Recent Tasks: ${tasks.take(5).map((t) => '${t.title} (${t.isCompleted ? 'completed' : 'pending'})').join(', ')}
 
 Recent Habits: ${habits.take(5).map((h) => '${h.title} (streak: ${h.currentStreak})').join(', ')}
 
-Provide insights in this JSON format:
+Based on the user's history and patterns, provide personalized insights in this JSON format:
 {
   "insights": [
     {
       "title": "Insight title",
-      "description": "Detailed explanation",
+      "description": "Detailed explanation based on user's history",
       "action": "Specific action to take",
       "type": "productivity|motivation|habit|task"
     }
   ],
   "priority_tasks": ["task1", "task2", "task3"],
-  "motivational_message": "Encouraging message"
+  "motivational_message": "Personalized encouraging message"
 }
 ''';
   }
 
   /// Build prompt for task prioritization
-  String _buildTaskPrioritizationPrompt(List<Task> tasks) {
+  String _buildTaskPrioritizationPrompt(List<Task> tasks, List<Map<String, dynamic>> taskHistory, Map<String, dynamic> userPatterns) {
     final pendingTasks = tasks.where((t) => !t.isCompleted).toList();
     
     return '''
-You are an AI task prioritization assistant. Analyze these tasks and return them in priority order.
+You are an AI task prioritization assistant with access to the user's complete task history and patterns. Analyze these tasks and return them in priority order.
 
-Tasks:
+Current Tasks:
 ${pendingTasks.map((t) => '- ${t.title} (${t.priority.name}, due: ${t.dueDate?.toString() ?? 'no deadline'})').join('\n')}
+
+User History & Patterns:
+- Total tasks in history: ${taskHistory.length}
+- Category preferences: ${userPatterns['categoryPreferences']?.toString() ?? 'None'}
+- Completion patterns: ${userPatterns['completionPatterns']?.toString() ?? 'None'}
 
 Return the task IDs in priority order as a JSON array:
 ["task_id_1", "task_id_2", "task_id_3", ...]
@@ -180,31 +234,37 @@ Consider:
 - High priority tasks first
 - Tasks with deadlines
 - Task complexity and estimated time
-- User's productivity patterns
+- User's historical productivity patterns
+- Category preferences and completion rates
+- Time of day and user's typical schedule
 ''';
   }
 
   /// Build prompt for habit suggestions
-  String _buildHabitSuggestionsPrompt(List<Habit> currentHabits, Map<String, dynamic> userStats) {
+  String _buildHabitSuggestionsPrompt(List<Habit> currentHabits, Map<String, dynamic> userStats, List<Map<String, dynamic>> habitHistory, Map<String, dynamic> userPatterns) {
     final weakHabits = currentHabits.where((h) => h.currentStreak < 3).length;
     final strongHabits = currentHabits.where((h) => h.currentStreak >= 7).length;
 
     return '''
-You are an AI habit coach. Suggest 2-3 new habits based on the user's current habits and productivity patterns.
+You are an AI habit coach with access to the user's complete habit history and patterns. Suggest 2-3 new habits based on the user's current habits and historical patterns.
 
 Current Habits: ${currentHabits.map((h) => '${h.title} (${h.frequencyLabel}, streak: ${h.currentStreak})').join(', ')}
 
-User Stats:
+User History & Patterns:
+- Total habits in history: ${habitHistory.length}
+- Average streak: ${userPatterns['averageStreak']?.toStringAsFixed(1) ?? '0'} days
+- Category preferences: ${userPatterns['categoryPreferences']?.toString() ?? 'None'}
+- Frequency preferences: ${userPatterns['frequencyPreferences']?.toString() ?? 'None'}
 - Weak habits (streak < 3): $weakHabits
 - Strong habits (streak >= 7): $strongHabits
 - Completion rate: ${(userStats['completionRate'] ?? 0.0) * 100}%
 
-Suggest habits in JSON format:
+Based on the user's historical patterns and preferences, suggest habits in JSON format:
 {
   "suggestions": [
     {
       "title": "Habit name",
-      "description": "Why this habit is beneficial",
+      "description": "Why this habit is beneficial based on user's patterns",
       "frequency": "daily|weekly|monthly",
       "category": "health|productivity|learning|social",
       "difficulty": "easy|medium|hard"
@@ -215,12 +275,15 @@ Suggest habits in JSON format:
   }
 
   /// Build prompt for motivational messages
-  String _buildMotivationalPrompt(Map<String, dynamic> userStats, List<Task> recentTasks, List<Habit> recentHabits) {
+  String _buildMotivationalPrompt(Map<String, dynamic> userStats, List<Task> recentTasks, List<Habit> recentHabits, Map<String, dynamic> userData) {
     final completionRate = userStats['completionRate'] ?? 0.0;
     final avgStreak = userStats['averageStreak'] ?? 0.0;
+    final taskHistory = userData['taskHistory'] as List? ?? [];
+    final habitHistory = userData['habitHistory'] as List? ?? [];
+    final userPatterns = userData['userPatterns'] as Map<String, dynamic>? ?? {};
 
     return '''
-You are an AI motivational coach. Generate a short, encouraging message (1-2 sentences) based on the user's recent activity.
+You are an AI motivational coach with access to the user's complete history and patterns. Generate a short, encouraging message (1-2 sentences) based on the user's recent activity and historical patterns.
 
 Recent Activity:
 - Task completion rate: ${(completionRate * 100).toInt()}%
@@ -228,11 +291,18 @@ Recent Activity:
 - Recent tasks: ${recentTasks.take(3).map((t) => t.title).join(', ')}
 - Recent habits: ${recentHabits.take(3).map((h) => h.title).join(', ')}
 
-Generate a motivational message that is:
+User History & Patterns:
+- Total tasks completed: ${taskHistory.length}
+- Total habits tracked: ${habitHistory.length}
+- Average streak: ${userPatterns['averageStreak']?.toStringAsFixed(1) ?? '0'} days
+- Category preferences: ${userPatterns['categoryPreferences']?.toString() ?? 'None'}
+
+Generate a personalized motivational message that is:
 - Encouraging but realistic
-- Specific to their recent activity
+- Specific to their recent activity and historical patterns
 - Actionable and positive
 - 1-2 sentences maximum
+- Based on their long-term progress and patterns
 ''';
   }
 

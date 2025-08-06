@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
 import '../services/ai_service.dart';
 import '../services/simple_ai_service.dart';
+import '../services/ai_memory_service.dart';
 import '../models/task.dart';
 import '../models/habit.dart';
 
 class AIProvider extends ChangeNotifier {
   final AIService _aiService = AIService();
   final SimpleAIService _simpleAIService = SimpleAIService();
+  final AIMemoryService _memoryService = AIMemoryService();
   
   // AI State
   Map<String, dynamic> _insights = {};
@@ -68,16 +70,20 @@ class AIProvider extends ChangeNotifier {
     _setLoading(true);
     
     try {
+      // Store data in AI memory for both free and premium users
+      await _memoryService.storeTaskData(tasks);
+      await _memoryService.storeHabitData(habits);
+      
       if (_isPremiumUser && _isServerAvailable) {
-        // Use advanced AI (Ollama)
+        // Use advanced AI (Ollama) with memory
         _insights = await _aiService.generateInsights(
           tasks: tasks,
           habits: habits,
           userStats: userStats,
         );
       } else {
-        // Use simple AI for free users
-        _insights = _simpleAIService.generateInsights(
+        // Use simple AI for free users with memory
+        _insights = await _simpleAIService.generateInsights(
           tasks: tasks,
           habits: habits,
           userStats: userStats,

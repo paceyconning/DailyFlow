@@ -1,17 +1,21 @@
 import '../models/task.dart';
 import '../models/habit.dart';
+import 'ai_memory_service.dart';
 
 class SimpleAIService {
   static final SimpleAIService _instance = SimpleAIService._internal();
   factory SimpleAIService() => _instance;
   SimpleAIService._internal();
 
+  // AI Memory Service
+  final AIMemoryService _memoryService = AIMemoryService();
+
   /// Generate basic insights for free users
-  Map<String, dynamic> generateInsights({
+  Future<Map<String, dynamic>> generateInsights({
     required List<Task> tasks,
     required List<Habit> habits,
     required Map<String, dynamic> userStats,
-  }) {
+  }) async {
     final completedTasks = tasks.where((t) => t.isCompleted).length;
     final totalTasks = tasks.length;
     final activeHabits = habits.where((h) => h.isActive).length;
@@ -19,15 +23,27 @@ class SimpleAIService {
         ? habits.map((h) => h.currentStreak).reduce((a, b) => a + b) / habits.length 
         : 0;
 
+    // Store data in AI memory
+    await _memoryService.storeTaskData(tasks);
+    await _memoryService.storeHabitData(habits);
+    
+    // Get user data for enhanced insights
+    final userData = await _memoryService.getComprehensiveUserData();
+    final taskHistory = userData['taskHistory'] as List? ?? [];
+    final habitHistory = userData['habitHistory'] as List? ?? [];
+    final userPatterns = userData['userPatterns'] as Map<String, dynamic>? ?? {};
+
     final insights = <Map<String, dynamic>>[];
 
-    // Productivity insight
+    // Enhanced productivity insight with memory
     if (totalTasks > 0) {
       final completionRate = completedTasks / totalTasks;
+      final historicalCompletionRate = userData['productivityStats']?['completionRate'] ?? 0.0;
+      
       if (completionRate < 0.5) {
         insights.add({
           'title': 'Focus on Completion',
-          'description': 'Try to complete at least half of your tasks today to build momentum.',
+          'description': 'Based on your history, try to complete at least half of your tasks today to build momentum.',
           'action': 'Pick your 3 most important tasks and complete them first.',
           'type': 'productivity'
         });
@@ -48,8 +64,11 @@ class SimpleAIService {
       }
     }
 
-    // Habit insight
+    // Enhanced habit insight with memory
     if (activeHabits > 0) {
+      final historicalAvgStreak = userPatterns['averageStreak'] ?? 0.0;
+      final categoryPreferences = userPatterns['categoryPreferences'] as Map<String, dynamic>? ?? {};
+      
       if (avgStreak >= 7) {
         insights.add({
           'title': 'Strong Habits',
