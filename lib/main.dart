@@ -9,10 +9,17 @@ import 'screens/tasks_screen.dart';
 import 'screens/habits_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/analytics_screen.dart';
+import 'services/notification_service.dart';
+import 'services/analytics_service.dart';
 import 'utils/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize services
+  await NotificationService().initialize();
+  AnalyticsService().recordSessionStart();
   
   // Initialize providers
   final themeProvider = ThemeProvider();
@@ -65,6 +72,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     const HomeScreen(),
     const TasksScreen(),
     const HabitsScreen(),
+    const AnalyticsScreen(),
     const GoalsScreen(),
     const SettingsScreen(),
   ];
@@ -105,6 +113,11 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               icon: Icon(Icons.repeat_outlined),
               activeIcon: Icon(Icons.repeat),
               label: 'Habits',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.analytics_outlined),
+              activeIcon: Icon(Icons.analytics),
+              label: 'Analytics',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.flag_outlined),
