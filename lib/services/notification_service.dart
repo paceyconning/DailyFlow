@@ -18,10 +18,14 @@ class NotificationService {
       requestBadgePermission: true,
       requestSoundPermission: true,
     );
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open notification',
+    );
 
     const initSettings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
+      linux: linuxSettings,
     );
 
     await _notifications.initialize(initSettings);
@@ -42,10 +46,15 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
+    const linuxDetails = LinuxNotificationDetails(
+      actionName: 'Open',
+      category: NotificationCategory.reminder,
+    );
 
     const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
+      linux: linuxDetails,
     );
 
     await _notifications.zonedSchedule(
@@ -73,10 +82,15 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
+    const linuxDetails = LinuxNotificationDetails(
+      actionName: 'Open',
+      category: NotificationCategory.reminder,
+    );
 
     const details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
+      linux: linuxDetails,
     );
 
     await _notifications.zonedSchedule(
