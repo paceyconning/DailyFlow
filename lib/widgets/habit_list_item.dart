@@ -117,52 +117,68 @@ class HabitListItem extends StatelessWidget {
                       
                       const SizedBox(height: 8),
                       
+                      // First row: Category and Frequency
                       Row(
                         children: [
                           // Category
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: habit.categoryColor.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  habit.categoryIcon,
-                                  size: 12,
-                                  color: habit.categoryColor,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  habit.categoryLabel,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: habit.categoryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    habit.categoryIcon,
+                                    size: 12,
                                     color: habit.categoryColor,
-                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      habit.categoryLabel,
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: habit.categoryColor,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           
                           const SizedBox(width: 8),
                           
                           // Frequency
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.grey.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              habit.frequencyLabel,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                habit.frequencyLabel,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ),
-                          
+                        ],
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Second row: Delete button and Streak
+                      Row(
+                        children: [
                           const Spacer(),
                           
                           // Delete button
