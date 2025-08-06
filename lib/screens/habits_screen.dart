@@ -29,7 +29,7 @@ class _HabitsScreenState extends State<HabitsScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              _showAddHabitDialog(context);
+              Navigator.pushNamed(context, '/add-habit');
             },
           ),
         ],

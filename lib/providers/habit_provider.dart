@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/habit.dart';
+import '../services/ai_memory_service.dart';
 
 class HabitProvider extends ChangeNotifier {
   static const String _habitsKey = 'habits';
@@ -9,6 +10,7 @@ class HabitProvider extends ChangeNotifier {
   List<Habit> _habits = [];
   List<Habit> _filteredHabits = [];
   String _currentFilter = 'all';
+  final AIMemoryService _memoryService = AIMemoryService();
   
   List<Habit> get habits => _habits;
   List<Habit> get filteredHabits => _filteredHabits;
@@ -75,6 +77,7 @@ class HabitProvider extends ChangeNotifier {
   Future<void> addHabit(Habit habit) async {
     _habits.add(habit);
     await _saveHabits();
+    await _memoryService.storeHabitData(_habits);
     _applyFilter();
     notifyListeners();
   }
@@ -84,6 +87,7 @@ class HabitProvider extends ChangeNotifier {
     if (index != -1) {
       _habits[index] = habit;
       await _saveHabits();
+      await _memoryService.storeHabitData(_habits);
       _applyFilter();
       notifyListeners();
     }
@@ -92,6 +96,7 @@ class HabitProvider extends ChangeNotifier {
   Future<void> deleteHabit(String habitId) async {
     _habits.removeWhere((habit) => habit.id == habitId);
     await _saveHabits();
+    await _memoryService.storeHabitData(_habits);
     _applyFilter();
     notifyListeners();
   }
@@ -125,6 +130,7 @@ class HabitProvider extends ChangeNotifier {
       }
       
       await _saveHabits();
+      await _memoryService.storeHabitData(_habits);
       _applyFilter();
       notifyListeners();
     }

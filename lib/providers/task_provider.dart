@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/task.dart';
+import '../services/ai_memory_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   static const String _tasksKey = 'tasks';
@@ -9,6 +10,7 @@ class TaskProvider extends ChangeNotifier {
   List<Task> _tasks = [];
   List<Task> _filteredTasks = [];
   String _currentFilter = 'all';
+  final AIMemoryService _memoryService = AIMemoryService();
   
   List<Task> get tasks => _tasks;
   List<Task> get filteredTasks => _filteredTasks;
@@ -89,6 +91,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> addTask(Task task) async {
     _tasks.add(task);
     await _saveTasks();
+    await _memoryService.storeTaskData(_tasks);
     _applyFilter();
     notifyListeners();
   }
@@ -98,6 +101,7 @@ class TaskProvider extends ChangeNotifier {
     if (index != -1) {
       _tasks[index] = task;
       await _saveTasks();
+      await _memoryService.storeTaskData(_tasks);
       _applyFilter();
       notifyListeners();
     }
@@ -106,6 +110,7 @@ class TaskProvider extends ChangeNotifier {
   Future<void> deleteTask(String taskId) async {
     _tasks.removeWhere((task) => task.id == taskId);
     await _saveTasks();
+    await _memoryService.storeTaskData(_tasks);
     _applyFilter();
     notifyListeners();
   }
@@ -118,6 +123,7 @@ class TaskProvider extends ChangeNotifier {
         completedAt: !_tasks[index].isCompleted ? DateTime.now() : null,
       );
       await _saveTasks();
+      await _memoryService.storeTaskData(_tasks);
       _applyFilter();
       notifyListeners();
     }

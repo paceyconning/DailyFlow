@@ -43,7 +43,7 @@ class _TasksScreenState extends State<TasksScreen> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              _showAddTaskDialog(context);
+              Navigator.pushNamed(context, '/add-task');
             },
           ),
         ],

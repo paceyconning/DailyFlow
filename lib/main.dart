@@ -10,6 +10,8 @@ import 'screens/habits_screen.dart';
 import 'screens/goals_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/analytics_screen.dart';
+import 'screens/add_task_screen.dart';
+import 'screens/add_habit_screen.dart';
 import 'services/notification_service.dart';
 import 'services/analytics_service.dart';
 import 'services/ai_service.dart';
@@ -59,6 +61,12 @@ class DailyFlowApp extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           home: const MainNavigationScreen(),
+          routes: {
+            '/tasks': (context) => const TasksScreen(),
+            '/habits': (context) => const HabitsScreen(),
+            '/add-task': (context) => const AddTaskScreen(),
+            '/add-habit': (context) => const AddHabitScreen(),
+          },
         );
       },
     );

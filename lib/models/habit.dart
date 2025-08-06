@@ -4,6 +4,59 @@ enum HabitFrequency { daily, weekly, monthly }
 
 enum HabitCategory { health, productivity, learning, mindfulness, fitness, other }
 
+extension HabitCategoryExtension on HabitCategory {
+  String get label {
+    switch (this) {
+      case HabitCategory.health:
+        return 'Health';
+      case HabitCategory.productivity:
+        return 'Productivity';
+      case HabitCategory.learning:
+        return 'Learning';
+      case HabitCategory.mindfulness:
+        return 'Mindfulness';
+      case HabitCategory.fitness:
+        return 'Fitness';
+      case HabitCategory.other:
+        return 'Other';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case HabitCategory.health:
+        return Icons.favorite;
+      case HabitCategory.productivity:
+        return Icons.work;
+      case HabitCategory.learning:
+        return Icons.school;
+      case HabitCategory.mindfulness:
+        return Icons.self_improvement;
+      case HabitCategory.fitness:
+        return Icons.fitness_center;
+      case HabitCategory.other:
+        return Icons.task;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case HabitCategory.health:
+        return Colors.red;
+      case HabitCategory.productivity:
+        return Colors.blue;
+      case HabitCategory.learning:
+        return Colors.green;
+      case HabitCategory.mindfulness:
+        return Colors.purple;
+      case HabitCategory.fitness:
+        return Colors.orange;
+      case HabitCategory.other:
+        return Colors.grey;
+    }
+  }
+}
+
 class Habit {
   final String id;
   final String title;

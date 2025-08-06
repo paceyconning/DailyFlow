@@ -4,6 +4,88 @@ enum TaskPriority { low, medium, high }
 
 enum TaskCategory { work, personal, health, learning, other }
 
+extension TaskPriorityExtension on TaskPriority {
+  String get label {
+    switch (this) {
+      case TaskPriority.low:
+        return 'Low';
+      case TaskPriority.medium:
+        return 'Medium';
+      case TaskPriority.high:
+        return 'High';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case TaskPriority.low:
+        return Icons.arrow_downward;
+      case TaskPriority.medium:
+        return Icons.remove;
+      case TaskPriority.high:
+        return Icons.arrow_upward;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case TaskPriority.low:
+        return Colors.green;
+      case TaskPriority.medium:
+        return Colors.orange;
+      case TaskPriority.high:
+        return Colors.red;
+    }
+  }
+}
+
+extension TaskCategoryExtension on TaskCategory {
+  String get label {
+    switch (this) {
+      case TaskCategory.work:
+        return 'Work';
+      case TaskCategory.personal:
+        return 'Personal';
+      case TaskCategory.health:
+        return 'Health';
+      case TaskCategory.learning:
+        return 'Learning';
+      case TaskCategory.other:
+        return 'Other';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case TaskCategory.work:
+        return Icons.work;
+      case TaskCategory.personal:
+        return Icons.person;
+      case TaskCategory.health:
+        return Icons.favorite;
+      case TaskCategory.learning:
+        return Icons.school;
+      case TaskCategory.other:
+        return Icons.task;
+    }
+  }
+
+  Color get color {
+    switch (this) {
+      case TaskCategory.work:
+        return Colors.blue;
+      case TaskCategory.personal:
+        return Colors.purple;
+      case TaskCategory.health:
+        return Colors.red;
+      case TaskCategory.learning:
+        return Colors.green;
+      case TaskCategory.other:
+        return Colors.grey;
+    }
+  }
+}
+
 class Task {
   final String id;
   final String title;
