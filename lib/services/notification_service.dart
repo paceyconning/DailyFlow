@@ -46,10 +46,7 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
-    const linuxDetails = LinuxNotificationDetails(
-      actionName: 'Open',
-      category: NotificationCategory.reminder,
-    );
+    const linuxDetails = LinuxNotificationDetails();
 
     const details = NotificationDetails(
       android: androidDetails,
@@ -82,10 +79,7 @@ class NotificationService {
     );
 
     const iosDetails = DarwinNotificationDetails();
-    const linuxDetails = LinuxNotificationDetails(
-      actionName: 'Open',
-      category: NotificationCategory.reminder,
-    );
+    const linuxDetails = LinuxNotificationDetails();
 
     const details = NotificationDetails(
       android: androidDetails,
